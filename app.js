@@ -2,22 +2,27 @@ require("dotenv").config();
 
 const express = require("express");
 const app = express();
-const pg = require("./models/pg_client")
+const morgan = require("morgan")
+const cors = require("cors")
+
+const pg = require('./models/pg_client')
+const errorHandler = require('./middleware/errorHandler')
+const unknownEndpoint = require('./middleware/unknownEndpoint')
+
+app.use(cors())
 
 // connect to database
 pg.checkConnection()
 
 // logging
-
-const cors = require("cors")
-app.use(cors())
+app.use(morgan("tiny"));
 
 // router API
 const testsController = require('./controllers/tests')
 app.use("/tests", testsController)
 
-// path not found and error middlewares
+// error handling
+app.use(unknownEndpoint)
+app.use(errorHandler)
 
-app.listen(process.env.PORT, () => {
-  console.log(`server up and listening on port ${process.env.PORT} :)`)
-});
+module.exports = app
