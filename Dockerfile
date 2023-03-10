@@ -1,6 +1,6 @@
 FROM node:19
 
-RUN mkdir -p /home/db-api
+WORKDIR /home/db-api
 
 COPY . /home/db-api
 
