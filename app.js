@@ -3,9 +3,11 @@ require("dotenv").config();
 const express = require("express");
 const app = express();
 const pg = require("./models/pg_client")
+const tests = require("./models/tests")
 
 // connect to database
 pg.checkConnection()
+
 // logging
 
 // router API
