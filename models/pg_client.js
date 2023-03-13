@@ -11,7 +11,8 @@ module.exports = {
   checkConnection: () => {
     pool.connect((err, client, release) => {
       if (err) {
-        return console.error('Error connecting to PG: ', err.stack)
+        console.error('Error connecting to PG: ', err.stack)
+        process.exit(1) // shut down container if no connection is made so we can attempt to restart
       }
       client.query('SELECT NOW()', (err, result) => {
         release()
