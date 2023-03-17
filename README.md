@@ -6,7 +6,7 @@
   - [x] `GET /tests` -> returns all the tests
   - [x] `POST /tests` -> creates test id in the test ids table for a new test and returns it
   - [ ] `GET /tests/:id` -> returns the metadata associated with a specific test
-  - [ ] `PATCH /tests/:id` -> allows user to change name of tests, and system can update start time, end time, and status
+  - [ ] `PUT /tests/:id` -> allows user to change name of tests, and system can update start time, end time, and status
   - [ ] `DELETE /tests/:id` -> deletes a test, and associated metrics, from the db
   - ToDo:
   - [ ]  provide an endpoint that should do a `pg_dump` to get all the data into an S3 bucket so we can take the whole system down.

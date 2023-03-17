@@ -4,7 +4,8 @@
   "description": "- Provides external API endpoints for edamame client to interface with internal service pertaining to postgres database",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js",
+    "run": "nodemon index.js"
   },
   "author": "",
   "license": "ISC",
@@ -14,5 +15,8 @@
     "express": "^4.18.2",
     "morgan": "^1.10.0",
     "pg": "^8.10.0"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.21"
   }
 }
