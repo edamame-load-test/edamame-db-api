@@ -1,7 +1,6 @@
 const tests = require('../models/tests')
 
 const express = require('express');
-const { response } = require('express');
 const router = express.Router();
 
 router.get('/', async (req, res) => {
