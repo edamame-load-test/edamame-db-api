@@ -27,8 +27,17 @@ router.get('/:id', async (req, res) => {
 })
 
 router.post('/', async (req, res) => {
+  const data = req.body
+  if (!data.name) {
+    data.name = tests.createName()
+  }
+
+  if (data.script) {
+    data.script = tests.cleanScriptString(data.script)
+  }
+
   try {
-    const id = await tests.create()
+    const id = await tests.create(data)
     res.status(201).json(id)
   } catch (error) {
     res.status(500).send(error)

@@ -1,3 +1,4 @@
+const crypto = require('crypto')
 const db = require('./pg_client')
 
 const tests = {
@@ -19,11 +20,12 @@ const tests = {
     }
   },
 
-  create: async () => {
+  create: async (data) => {
+    const query = `INSERT INTO tests (name, script)
+                    VALUES ($1, $2)
+                    RETURNING id, name, start_time, end_time, status, script;`
     try {
-      const result = await db.query(
-        'INSERT INTO tests DEFAULT VALUES RETURNING id;'
-      );
+      const result = await db.query(query, [data.name, data.script]);
       return result.rows[0];
     } catch (err) {
       console.log(err);
@@ -85,6 +87,14 @@ const tests = {
   validKeys: (data) => {
     const keys = Object.keys(data);
     return keys.includes('name') || keys.includes('status');
+  },
+
+  createName: () => {
+    return crypto.randomUUID()
+  },
+
+  cleanScriptString: (script) => {
+    return script.replace(/'/g, "''");
   }
 }
 
