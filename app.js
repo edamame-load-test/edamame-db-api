@@ -10,6 +10,7 @@ const errorHandler = require('./middleware/errorHandler')
 const unknownEndpoint = require('./middleware/unknownEndpoint')
 
 app.use(cors())
+app.use(express.json())
 
 // connect to database
 pg.checkConnection()

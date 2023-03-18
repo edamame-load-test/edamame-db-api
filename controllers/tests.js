@@ -17,7 +17,7 @@ router.get('/:id', async (req, res) => {
   try {
     const test = await tests.get(id)
     if (test === undefined) {
-      res.status(404).send({error: "Nonexistent or malformed test id"})
+      res.status(404).send({ error: "Nonexistent or malformed test id" })
     } else {
       res.status(200).json(test)
     }
@@ -32,6 +32,26 @@ router.post('/', async (req, res) => {
     res.status(201).json(id)
   } catch (error) {
     res.status(500).send(error)
+  }
+})
+
+router.put('/:id', async (req, res, next) => {
+  const { id } = req.params
+  const data = req.body
+
+  if (!tests.validKeys(data)) {
+    res.status(400).send({ error: "Invalid or malformed data"})
+  } else {
+    try {
+      const test = await tests.edit(id, data);
+      if (test === undefined) {
+        res.status(404).send({ error: 'Nonexistent or malformed test id' });
+      } else {
+        res.status(200).json(test);
+      }
+    } catch (error) {
+      res.status(500).send(error);
+    }
   }
 })
 

@@ -39,15 +39,52 @@ const tests = {
   },
 
   edit: async (id, data) => {
-    const params = Object.entries.flat(data).concat(id)
-    const query = `UPDATE tests SET $1 = $2 WHERE id = $3
-                     RETURNING id, name, start_time, end_time, status, script;`
+    let query;
+    let params;
+    if (Object.keys(data).includes('name')) {
+      query = `UPDATE tests SET name = $1 
+                WHERE id = $2
+                RETURNING id, 
+                          name, 
+                          start_time, 
+                          end_time, 
+                          status, 
+                          script;`;
+      params = [data.name, id]
+    } else if (Object.keys(data).includes('status')) {
+      if (data.status === 'completed') {
+        query = `UPDATE tests 
+                  SET status = $1, end_time = now()
+                  WHERE id = $2
+                  RETURNING id, 
+                            name, 
+                            start_time, 
+                            end_time, 
+                            status, 
+                            script;`;
+      } else {
+        query = `UPDATE tests SET status = $1
+                  WHERE id = $2
+                  RETURNING id, 
+                            name, 
+                            start_time, 
+                            end_time, 
+                            status, 
+                            script;`;
+      }
+      params = [data.status, id]
+    }
     try {
       const result = await db.query(query, params);
       return result.rows[0]
     } catch (err) {
       console.log(err)
     }
+  },
+
+  validKeys: (data) => {
+    const keys = Object.keys(data);
+    return keys.includes('name') || keys.includes('status');
   }
 }
 
