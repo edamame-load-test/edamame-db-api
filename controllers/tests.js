@@ -35,7 +35,7 @@ router.post('/', async (req, res) => {
   }
 })
 
-router.put('/:id', async (req, res, next) => {
+router.put('/:id', async (req, res) => {
   const { id } = req.params
   const data = req.body
 
@@ -52,6 +52,17 @@ router.put('/:id', async (req, res, next) => {
     } catch (error) {
       res.status(500).send(error);
     }
+  }
+})
+
+router.delete('/:id', async (req, res) => {
+  const { id } = req.params
+
+  try {
+    await tests.delete(id)
+    res.status(204).send()
+  } catch (error) {
+    res.status(500).send(error)
   }
 })
 

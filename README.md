@@ -5,10 +5,10 @@
 - Need the following endpoints:
   - [x] `GET /tests` -> returns all the tests
   - [x] `POST /tests` -> creates test id in the test ids table for a new test and returns it
-  - [ ] `GET /tests/:id` -> returns the metadata associated with a specific test
-  - [ ] `PUT /tests/:id` -> allows user to change name of tests, and system can update start time, end time, and status
+  - [x] `GET /tests/:id` -> returns the metadata associated with a specific test
+  - [x] `PUT /tests/:id` -> allows user to change name of tests, and system can update start time, end time, and status
   - [ ] `DELETE /tests/:id` -> deletes a test, and associated metrics, from the db
-  - ToDo:
+- ToDo Later:
   - [ ]  provide an endpoint that should do a `pg_dump` to get all the data into an S3 bucket so we can take the whole system down.
   - [ ] provide an endpoint that accepts some kind of `sql` file and runs it against the db
 
