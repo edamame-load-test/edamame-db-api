@@ -95,6 +95,11 @@ const tests = {
 
   cleanScriptString: (script) => {
     return script.replace(/'/g, "''");
+  },
+
+  invalidName: (name) => {
+    const names = this.getAll().map(test => test.name)
+    return name.length > 80 || names.includes(name)
   }
 }
 

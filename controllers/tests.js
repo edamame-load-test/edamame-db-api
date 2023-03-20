@@ -1,6 +1,7 @@
 const tests = require('../models/tests')
 
 const express = require('express');
+const { invalidName } = require('../models/tests');
 const router = express.Router();
 
 router.get('/', async (req, res) => {
@@ -28,6 +29,11 @@ router.get('/:id', async (req, res) => {
 
 router.post('/', async (req, res) => {
   const data = req.body
+
+  if (tests.invalidName(data.name)) {
+    res.status(400).json({ error: 'Invalid or malformed data. Hint: Names must be unique and no longer than 80 chars' })
+  }
+
   if (!data.name) {
     data.name = tests.createName()
   }
@@ -48,8 +54,8 @@ router.put('/:id', async (req, res) => {
   const { id } = req.params
   const data = req.body
 
-  if (!tests.validKeys(data)) {
-    res.status(400).send({ error: "Invalid or malformed data"})
+  if (!tests.validKeys(data) || test.invalidName(data.name)) {
+    res.status(400).send({ error: "Invalid or malformed data. Hint: Names must be unique and no longer than 80 chars"})
   } else {
     try {
       const test = await tests.edit(id, data);
