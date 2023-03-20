@@ -96,6 +96,11 @@ const tests = {
   cleanScriptString: (script) => {
     // JSON stringify escaped double quotes, so this should work
     return script.replace(/'/g, "''");
+  },
+
+  invalidName: (name) => {
+    const names = this.getAll().map(test => test.name)
+    return name.length > 80 || names.includes(name)
   }
 }
 
