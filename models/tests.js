@@ -94,6 +94,7 @@ const tests = {
   },
 
   cleanScriptString: (script) => {
+    // JSON stringify escaped double quotes, so this should work
     return script.replace(/'/g, "''");
   }
 }
