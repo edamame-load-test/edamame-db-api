@@ -30,12 +30,16 @@ router.get('/:id', async (req, res) => {
 router.post('/', async (req, res) => {
   const data = req.body
 
-  if (tests.invalidName(data.name)) {
-    res.status(400).json({ error: 'Invalid or malformed data. Hint: Names must be unique and no longer than 80 chars' })
+  if (!data.name) {
+    data.name = tests.createName();
   }
 
-  if (!data.name) {
-    data.name = tests.createName()
+  if (await tests.invalidName(data.name)) {
+    res.status(400).send(
+      { 
+        error: 'Invalid or malformed data. Hint: Names must be unique and no longer than 80 chars' 
+      }
+    )
   }
 
   if (data.script) {
@@ -54,8 +58,13 @@ router.put('/:id', async (req, res) => {
   const { id } = req.params
   const data = req.body
 
-  if (!tests.validKeys(data) || test.invalidName(data.name)) {
-    res.status(400).send({ error: "Invalid or malformed data. Hint: Names must be unique and no longer than 80 chars"})
+  if (!tests.validKeys(data)) {
+    res.status(400).send({ error: "Invalid or malformed data."})
+  } else if (data.name && await tests.invalidName(data.name)) {
+    res.status(400).send({
+      error:
+        'Invalid or malformed data. Hint: Names must be unique and no longer than 80 chars',
+    });
   } else {
     try {
       const test = await tests.edit(id, data);
