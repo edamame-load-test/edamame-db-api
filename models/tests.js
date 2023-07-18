@@ -81,33 +81,42 @@ const tests = {
 
   setUpPgDump: async (testName) => {
     try {
-      await this.prepPgDumpTable("pg_dump_tests", "tests");
-      await this.prepPgDumpTable("pg_dump_samples", "samples");
-  
-      let copyDataQuery = `INSERT INTO $1 (SELECT * FROM $2` +
-        ` WHERE $3 = $4) RETURNING id`;
-      const params1 = ["pg_dump_tests", "tests", "name", testName];
-      const testId = await db.query(copyDataQuery, params1);
-      testId = testId.rows[0];
-      const params2 = ["pg_dump_samples", "samples", "test_id", testId];
-      await db.query(copyDataQuery, params2);
+      await tests.prepPgDumpTable("pg_dump_tests", "tests");
+      await tests.prepPgDumpTable("pg_dump_samples", "samples");
+
+      let query = tests.copyDataQuery("pg_dump_tests", "tests", "name");
+      
+      const testIdData = await db.query(query, [testName]);
+      const testId = testIdData.rows[0].id;
+
+      query = tests.copyDataQuery("pg_dump_samples", "samples", "test_id");
+      await db.query(query, [testId]);
     } catch (err) {
       console.log(err);
     }
   },
 
+  copyDataQuery: (copyTo, copyFrom, filterCol) => {
+    return `INSERT INTO ${copyTo} ` +
+      `(SELECT * FROM ${copyFrom} ` +
+      `WHERE ${filterCol} = $1)` +
+      `RETURNING id;`;
+  },
+
+  copySchemaQuery: (copy, original) => {
+    return `CREATE TABLE ${copy} AS TABLE ${original} WITH NO DATA;`;
+  },
+
   prepPgDumpTable: async (tableName, tableToCopy) => {
-    existsQuery = `SELECT EXISTS (SELECT FROM ` +
+    let query = `SELECT EXISTS (SELECT FROM ` +
       `information_schema.tables WHERE table_name = $1);`;
-    
-    let copyTblExists = await db.query(query, [tableName]);
-  
-    if (copyTblExists.rows[0] === "f") {
-      copySchemaQuery = `CREATE TABLE $1 AS TABLE $2 WITH NO DATA`;
-      await db.query(copySchemaQuery, [tableName, tableToCopy]);
+    let data = await db.query(query, [tableName]);
+
+    if (data.rows[0].exists === false) {
+      await db.query(tests.copySchemaQuery(tableName, tableToCopy));
     } else {
-      // remove data from prior pg dumps, if there is any
-      await db.query(`DELETE * FROM $1`, [tableName]);
+      // remove any temporary copy data from prior pg dumps
+      await db.query(`DELETE FROM ${tableName}`);
     }
   },
 
@@ -117,7 +126,7 @@ const tests = {
   },
 
   createName: () => {
-    return crypto.randomUUID()
+    return crypto.randomUUID();
   },
 
   cleanScriptString: (script) => {
