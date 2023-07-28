@@ -1,25 +1,36 @@
 {
   "name": "db-api",
   "version": "1.0.0",
+  "type": "module",
   "description": "- Provides external API endpoints for edamame client to interface with internal service pertaining to postgres database",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js",
-    "test": "jest"
+    "test": "NODE_ENV=test jest"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@babel/preset-env": "^7.22.9",
+    "babel-jest": "^29.6.1",
     "cors": "^2.8.5",
     "dotenv": "^16.0.3",
     "express": "^4.18.2",
+    "fs": "^0.0.1-security",
     "morgan": "^1.10.0",
+    "path": "^0.12.7",
     "pg": "^8.10.0"
   },
   "devDependencies": {
-    "jest": "^29.5.0",
-    "nodemon": "^2.0.21",
+    "babel-plugin-transform-import-meta": "^2.2.0",
+    "jest": "^29.6.1",
+    "nodemon": "^3.0.1",
     "supertest": "^6.3.3"
+  },
+  "jest": {
+    "transform": {
+      "^.+\\.[t|j]sx?$": "babel-jest"
+    }
   }
 }

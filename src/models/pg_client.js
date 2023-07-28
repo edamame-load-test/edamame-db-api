@@ -1,10 +1,11 @@
-require("dotenv").config();
+import dotenv from 'dotenv';
+dotenv.config();
 
-const { Pool } = require("pg");
-
+import pg from "pg";
+const { Pool } = pg;
 const pool = new Pool();
 
-module.exports = {
+export default {
   query: async (text, params) => {
     return pool.query(text, params);
   },
@@ -22,6 +23,6 @@ module.exports = {
         }
         console.log(`Connected to PG: ${result.rows[0].now}`);
       });
-    })
+    });
   }
 };

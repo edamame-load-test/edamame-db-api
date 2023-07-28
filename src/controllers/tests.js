@@ -1,7 +1,9 @@
-const tests = require('../models/tests');
-
-const express = require('express');
-const { invalidName } = require('../models/tests');
+import express from 'express';
+import tests from '../models/tests.js';
+import archiver from '../models/archiver.js';
+import {
+  ARCHIVE
+} from '../constants/constants.js';
 const router = express.Router();
 
 router.get('/', async (req, res) => {
@@ -23,27 +25,34 @@ router.get('/:id', async (req, res) => {
       res.status(200).json(test);
     }
   } catch (error) {
+    console.log(error);
     res.status(500).send(error);
   }
 });
 
-router.post('/pg_dump/:testName', async (req, res) => {
+router.post('/archive/:testName', async (req, res) => {
   const { testName } = req.params;
   let msg;
-  const dataExists = await tests.nameExists(testName);
-  if (!dataExists) {
-    msg = `Cannot perform pg dump for the test: ` + 
-      `${testName}, as there is no data associated ` +
-      `with this test name.`;
+  const test = await tests.get("", testName);
+
+  if (test === undefined) {
+    msg = `Cannot archive a nonexistent test: ${testName}`;
     res.status(400).send({ error: msg });
   } else {
     try {
-      await tests.setUpPgDump(testName);
-      msg = `Completed setup of pg dump for the test: ${testName}`;
+      await archiver.archiveTest(test);
+      msg = `Successfully archived test: ${testName} in ` +
+        `your ${ARCHIVE} AWS S3 Bucket.`;
       res.status(201).send({ success: msg });
     } catch (error) {
-      msg = `Issue setting up pg dump tables: ${error.message}`;
-      res.status(500).send({ error: msg });
+      console.log(error);
+      msg = error.message;
+      if (msg.match("10,000 subpart upload limit|already exists")) {
+        res.status(400).send({ error: msg });
+      } else {
+        msg = `Issue archiving test ${testName}: ${msg}`;
+        res.status(500).send({ error: msg });
+      }
     }
   }
 });
@@ -111,4 +120,4 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;
