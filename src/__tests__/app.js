@@ -1,5 +1,5 @@
-const request = require("supertest");
-const app = require('./app.js');
+import request from "supertest";
+import app from '../app.js';
 
 describe("/tests path", () => {
   test("GET method responds with 200", async () => {
@@ -60,39 +60,6 @@ describe("/tests path", () => {
       'error',
       'Invalid or malformed data. Hint: Names must be unique and no longer than 80 chars'
     );
-  });
-});
-
-describe("/tests/pg_dump/:testName path", () => {
-  let id;
-  const sampleName = "example";
-
-  beforeAll(async () => {
-    const response = await request(app).post("/tests").send({ name: sampleName });
-    id = response.body.id;
-  });
-
-  test("POST method returns 400 & error message that there is no data associated with incorrect test name", async () => {
-    const fakeName = "this_test_name_does_not_exist";
-    const response = await request(app).post(`/tests/pg_dump/${fakeName}`);
-    expect(response.statusCode).toBe(400);
-    expect(response.body).toHaveProperty(
-      'error',
-      `Cannot perform pg dump for the test: ${fakeName}, as there is no data associated with this test name.`
-    );
-  });
-
-  test("POST method returns 201 & success message that data pg dump was successfully completed as data is inserted into pg dump specific tables", async () => {
-    const response = await request(app).post(`/tests/pg_dump/${sampleName}`);
-    expect(response.statusCode).toBe(201);
-    expect(response.body).toHaveProperty(
-      'success',
-      `Completed setup of pg dump for the test: ${sampleName}`
-    );
-  });
-
-  afterAll(async () => {
-    await request(app).delete(`/tests/${id}`);
   });
 });
 

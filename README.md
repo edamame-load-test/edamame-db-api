@@ -9,9 +9,9 @@ To Dos:
   - [x] `GET /tests` -> returns all the tests
   - [x] `POST /tests` -> creates a new test with either custom name or randomly generated name and script, and returns the test
   - [x] `GET /tests/:id` -> returns the metadata associated with a specific test
-  - [x] `PATCH /tests/:id` -> allows user to change some information about a test: its name, status, end time, and archive_id
+  - [x] `PATCH /tests/:id` -> allows user to change some information about a test: its name, status, and end time
   - [x] `DELETE /tests/:id` -> deletes a test, and associated metrics, from the db
-  - [x] `POST /tests/pg_dump/:testName ` -> sets up pg dump process by creating copy tables to store a single test's data at a time for a more manageable pg dump
+  - [x] `POST /tests/archive/:testName ` -> ensures the AWS s3 bucket is setup (creates a bucket if one doesn't already exist) and uploads a single load test's data as an s3 object with the standard infrequent access storage class as a compressed tar file
 - ToDo Later:
   - [ ] provide an endpoint that accepts some kind of `sql` file and runs it against the db
 
@@ -37,8 +37,7 @@ Example response: `200 OK`
     "start_time": "2023-03-18T18:55:14.179Z",
     "end_time": "2023-03-18T19:01:05.214Z",
     "status": "completed",
-    "script": "import http from ''k6/http'';\nimport { check } from ''k6'';\n\nexport let options = {\n  stages: [\n    { target: 200, duration: ''120s'' },\n    { target: 0, duration: ''30s'' },\n  ],\n};\n\nexport default function () {\n  const result = http.get(''https://test-api.k6.io/public/crocodiles/'');\n  check(result, {\n    ''http response status code is 200'': result.status === 200,\n  });\n}",
-    "archive_id": ""
+    "script": "import http from ''k6/http'';\nimport { check } from ''k6'';\n\nexport let options = {\n  stages: [\n    { target: 200, duration: ''120s'' },\n    { target: 0, duration: ''30s'' },\n  ],\n};\n\nexport default function () {\n  const result = http.get(''https://test-api.k6.io/public/crocodiles/'');\n  check(result, {\n    ''http response status code is 200'': result.status === 200,\n  });\n}"
   },
   {
     "id": 11,
@@ -46,8 +45,7 @@ Example response: `200 OK`
     "start_time": "2023-03-18T18:54:51.611Z",
     "end_time": "2023-03-18T18:56:59.596Z",
     "status": "completed",
-    "script": "import http from ''k6/http'';\nimport { check } from ''k6'';\n\nexport let options = {\n  stages: [\n    { target: 200, duration: ''120s'' },\n    { target: 0, duration: ''30s'' },\n  ],\n};\n\nexport default function () {\n  const result = http.get(''https://test-api.k6.io/public/crocodiles/'');\n  check(result, {\n    ''http response status code is 200'': result.status === 200,\n  });\n}",
-    "archive_id": ""
+    "script": "import http from ''k6/http'';\nimport { check } from ''k6'';\n\nexport let options = {\n  stages: [\n    { target: 200, duration: ''120s'' },\n    { target: 0, duration: ''30s'' },\n  ],\n};\n\nexport default function () {\n  const result = http.get(''https://test-api.k6.io/public/crocodiles/'');\n  check(result, {\n    ''http response status code is 200'': result.status === 200,\n  });\n}"
   }
 ]
 ```
@@ -76,8 +74,7 @@ Example response: `201 Created`
   "start_time": "2023-03-18T19:07:08.391Z",
   "end_time": null,
   "status": "starting",
-  "script": "import http from ''k6/http'';\nimport { check } from ''k6'';\n\nexport let options = {\n  stages: [\n    { target: 200, duration: ''120s'' },\n    { target: 0, duration: ''30s'' },\n  ],\n};\n\nexport default function () {\n  const result = http.get(''https://test-api.k6.io/public/crocodiles/'');\n  check(result, {\n    ''http response status code is 200'': result.status === 200,\n  });\n}",
-  "archive_id": ""
+  "script": "import http from ''k6/http'';\nimport { check } from ''k6'';\n\nexport let options = {\n  stages: [\n    { target: 200, duration: ''120s'' },\n    { target: 0, duration: ''30s'' },\n  ],\n};\n\nexport default function () {\n  const result = http.get(''https://test-api.k6.io/public/crocodiles/'');\n  check(result, {\n    ''http response status code is 200'': result.status === 200,\n  });\n}"
 }
 ```
 
@@ -98,8 +95,7 @@ Example response: `201 Created`
   "start_time": "2023-03-18T19:07:55.262Z",
   "end_time": null,
   "status": "starting",
-  "script": "import http from ''k6/http'';\nimport { check } from ''k6'';\n\nexport let options = {\n  stages: [\n    { target: 200, duration: ''120s'' },\n    { target: 0, duration: ''30s'' },\n  ],\n};\n\nexport default function () {\n  const result = http.get(''https://test-api.k6.io/public/crocodiles/'');\n  check(result, {\n    ''http response status code is 200'': result.status === 200,\n  });\n}",
-  "archive_id": ""
+  "script": "import http from ''k6/http'';\nimport { check } from ''k6'';\n\nexport let options = {\n  stages: [\n    { target: 200, duration: ''120s'' },\n    { target: 0, duration: ''30s'' },\n  ],\n};\n\nexport default function () {\n  const result = http.get(''https://test-api.k6.io/public/crocodiles/'');\n  check(result, {\n    ''http response status code is 200'': result.status === 200,\n  });\n}"
 }
 ```
 
@@ -123,8 +119,7 @@ Example response: `200 OK`
   "start_time": "2023-03-18T18:54:51.611Z",
   "end_time": "2023-03-18T18:56:59.596Z",
   "status": "completed",
-  "script": "import http from ''k6/http'';\nimport { check } from ''k6'';\n\nexport let options = {\n  stages: [\n    { target: 200, duration: ''120s'' },\n    { target: 0, duration: ''30s'' },\n  ],\n};\n\nexport default function () {\n  const result = http.get(''https://test-api.k6.io/public/crocodiles/'');\n  check(result, {\n    ''http response status code is 200'': result.status === 200,\n  });\n}",
-  "archive_id": ""
+  "script": "import http from ''k6/http'';\nimport { check } from ''k6'';\n\nexport let options = {\n  stages: [\n    { target: 200, duration: ''120s'' },\n    { target: 0, duration: ''30s'' },\n  ],\n};\n\nexport default function () {\n  const result = http.get(''https://test-api.k6.io/public/crocodiles/'');\n  check(result, {\n    ''http response status code is 200'': result.status === 200,\n  });\n}"
 }
 ```
 
@@ -159,8 +154,7 @@ Example response: `200 OK`
   "start_time": "2023-03-18T18:55:14.179Z",
   "end_time": "2023-03-18T19:01:05.214Z",
   "status": "completed",
-  "script": "import http from ''k6/http'';\nimport { check } from ''k6'';\n\nexport let options = {\n  stages: [\n    { target: 200, duration: ''120s'' },\n    { target: 0, duration: ''30s'' },\n  ],\n};\n\nexport default function () {\n  const result = http.get(''https://test-api.k6.io/public/crocodiles/'');\n  check(result, {\n    ''http response status code is 200'': result.status === 200,\n  });\n}",
-  "archive_id": ""
+  "script": "import http from ''k6/http'';\nimport { check } from ''k6'';\n\nexport let options = {\n  stages: [\n    { target: 200, duration: ''120s'' },\n    { target: 0, duration: ''30s'' },\n  ],\n};\n\nexport default function () {\n  const result = http.get(''https://test-api.k6.io/public/crocodiles/'');\n  check(result, {\n    ''http response status code is 200'': result.status === 200,\n  });\n}"
 }
 ```
 
@@ -181,8 +175,7 @@ Example response: `200 OK`
   "start_time": "2023-03-18T19:07:55.262Z",
   "end_time": null,
   "status": "running",
-  "script": "import http from ''k6/http'';\nimport { check } from ''k6'';\n\nexport let options = {\n  stages: [\n    { target: 200, duration: ''120s'' },\n    { target: 0, duration: ''30s'' },\n  ],\n};\n\nexport default function () {\n  const result = http.get(''https://test-api.k6.io/public/crocodiles/'');\n  check(result, {\n    ''http response status code is 200'': result.status === 200,\n  });\n}",
-  "archive_id": ""
+  "script": "import http from ''k6/http'';\nimport { check } from ''k6'';\n\nexport let options = {\n  stages: [\n    { target: 200, duration: ''120s'' },\n    { target: 0, duration: ''30s'' },\n  ],\n};\n\nexport default function () {\n  const result = http.get(''https://test-api.k6.io/public/crocodiles/'');\n  check(result, {\n    ''http response status code is 200'': result.status === 200,\n  });\n}"
 }
 ```
 
@@ -205,38 +198,15 @@ Example response: `200 OK`
   "start_time": "2023-03-18T19:07:55.262Z",
   "end_time": "2023-03-18T19:34:26.991Z",
   "status": "completed",
-  "script": "import http from ''k6/http'';\nimport { check } from ''k6'';\n\nexport let options = {\n  stages: [\n    { target: 200, duration: ''120s'' },\n    { target: 0, duration: ''30s'' },\n  ],\n};\n\nexport default function () {\n  const result = http.get(''https://test-api.k6.io/public/crocodiles/'');\n  check(result, {\n    ''http response status code is 200'': result.status === 200,\n  });\n}",
-  "archive_id": ""
-}
-```
-
-Example request to update archive_id:
-
-```json
-{
-  "archive_id": "fake_example_id"
-}
-```
-
-Example response: `200 OK`
-
-```json
-{
-  "id": 21,
-  "name": "Example",
-  "start_time": "2023-03-18T18:55:14.179Z",
-  "end_time": "2023-03-18T19:01:05.214Z",
-  "status": "completed",
-  "script": "import http from ''k6/http'';\nimport { check } from ''k6'';\n\nexport let options = {\n  stages: [\n    { target: 200, duration: ''120s'' },\n    { target: 0, duration: ''30s'' },\n  ],\n};\n\nexport default function () {\n  const result = http.get(''https://test-api.k6.io/public/crocodiles/'');\n  check(result, {\n    ''http response status code is 200'': result.status === 200,\n  });\n}",
-  "archive_id": "fake_example_id"
+  "script": "import http from ''k6/http'';\nimport { check } from ''k6'';\n\nexport let options = {\n  stages: [\n    { target: 200, duration: ''120s'' },\n    { target: 0, duration: ''30s'' },\n  ],\n};\n\nexport default function () {\n  const result = http.get(''https://test-api.k6.io/public/crocodiles/'');\n  check(result, {\n    ''http response status code is 200'': result.status === 200,\n  });\n}"
 }
 ```
 
 Notes:
 
-- Only one attribute change at a time is expected. As a result, `name`, `status`, and `archive_id` cannot be changed in the same patch request. If all values are present in the JSON body of the request, the name change will be prioritized first, leaving the status and archive_id attributes unchanged.
+- Only one attribute change at a time is expected. As a result, `name` and `status` cannot be changed in the same patch request. If all values are present in the JSON body of the request, the name change will be prioritized first, leaving the status attribute unchanged.
 - No other values (i.e. `id`, `script`, `start_time`, etc) can be changed via the API.
-- If keys other than `name`, `status`, and `archive_id` are specified in the JSON request body, it will result in a `400 Bad Request` response with the following message:
+- If keys other than `name` and `status` are specified in the JSON request body, it will result in a `400 Bad Request` response with the following message:
 
 ```json
 {
@@ -252,18 +222,18 @@ Notes:
 
 ---
 
-### Setting up a PG Dump
+### Archiving a test in an AWS S3 Bucket
 
-`POST /tests/pg_dump/:testName` -> Copies all test and samples data associated with the test whose name is `testName` into newly created separate tables for a pg dump. Since there can be a lot of tests and metrics associated with one individual test, there's more flexibility and granularity of control to perform a pg dump on the separate tables that contain only one test's data.
+`POST /tests/archive/:testName` -> Creates a tar file (that's ultimately a compressed version of a json file) that contains the data of a single load test. Subsequently, it uploads the compressed file as an s3 object to the edamame load tests AWS s3 bucket for longer term storage. The storage class of the s3 object upload is standard infrequent access, which offers cheaper access relative to some other S3 object storage classes, but also quick retrieval when the user wants to restore the data. If a user wants to use AWS Glacier storage instead (for even cheaper AWS cold storage), they can change the storage class of the uploaded load test s3 objects through the AWS CLI or the AWS console.
 
 Example usage:
-`POST /tests/pg_dump/example`
+`POST /tests/archive/50kVus`
 
 Response: `201 OK`
 
 ```json
 {
-  "success": "Completed setup of pg dump for the test: example"
+  "success": "Successfully archived test: 50kVus in your edamame-load-tests AWS S3 Bucket."
 }
 ```
 
@@ -274,6 +244,6 @@ Note:
 
 ```json
 {
-  "error": "Cannot perform pg dump for the test: incorrectName, as there is no data associated with this test name."
+  "error": "Cannot archive a nonexistent test: incorrectTestName."
 }
 ```

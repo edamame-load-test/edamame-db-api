@@ -1,16 +1,20 @@
-const crypto = require('crypto');
-const db = require('./pg_client');
+import crypto from 'crypto';
+import db from './pg_client.js';
+import files from './files.js';
+import { promisify } from "util";
+import child_process from "child_process";
+const exec = promisify(child_process.exec);
 
 const tests = {
   colsToReturn: () => {
     return (
       `RETURNING id, name, start_time, ` +
-      `end_time, status, script, archive_id;`
+      `end_time, status, script;`
     );
   },
 
   formatPatchQueryParams: (id, data) => {
-    const { name, status, archive_id } = data;
+    const { name, status } = data;
     let colsToUpdate;
     let params = [id];
 
@@ -23,9 +27,6 @@ const tests = {
         colsToUpdate += `, end_time = now()`;
       }
       params.unshift(status);
-    } else if (archive_id) {
-      colsToUpdate = `archive_id = $1`;
-      params.unshift(archive_id);
     }
     let query = `UPDATE tests SET ${colsToUpdate} ` +
       `WHERE id = $2 ${tests.colsToReturn()}`;
@@ -34,16 +35,27 @@ const tests = {
 
   getAll: async () => {
     try {
-      const result = await db.query('SELECT * FROM tests ORDER BY start_time DESC;');
+      let query = 'SELECT * FROM tests ORDER BY start_time DESC;'
+      const result = await db.query(query);
       return result.rows;
     } catch (err) {
       console.log(err);
     }
   },
 
-  get: async (id) => {
+  get: async (id, name = "") => {
+    let query;
+    let params;
+
     try {
-      const result = await db.query('SELECT * FROM tests WHERE id = $1', [id]);
+      if (name) {
+        query = 'SELECT * FROM tests WHERE name = $1';
+        params = [name];
+      } else {
+        query = 'SELECT * FROM tests WHERE id = $1';
+        params = [id];
+      }
+      const result = await db.query(query, params);
       return result.rows[0];
     } catch (err) {
       console.log(err);
@@ -79,50 +91,33 @@ const tests = {
     }
   },
 
-  setUpPgDump: async (testName) => {
-    try {
-      await tests.prepPgDumpTable("pg_dump_tests", "tests");
-      await tests.prepPgDumpTable("pg_dump_samples", "samples");
-
-      let query = tests.copyDataQuery("pg_dump_tests", "tests", "name");
-      
-      const testIdData = await db.query(query, [testName]);
-      const testId = testIdData.rows[0].id;
-
-      query = tests.copyDataQuery("pg_dump_samples", "samples", "test_id");
-      await db.query(query, [testId]);
-    } catch (err) {
-      console.log(err);
-    }
+  idQuery: (idColumn, id, table) => {
+    return (
+      `SELECT * FROM ${table} ` +
+      `WHERE ${idColumn} = ${id};`
+    );
   },
 
-  copyDataQuery: (copyTo, copyFrom, filterCol) => {
-    return `INSERT INTO ${copyTo} ` +
-      `(SELECT * FROM ${copyFrom} ` +
-      `WHERE ${filterCol} = $1)` +
-      `RETURNING id;`;
+  dataDump: async (testId, uploadFileName) => {
+    const testQ = tests.idQuery("id", testId, "tests");
+    const samplesQ = tests.idQuery("test_id", testId, "samples");
+     
+    const testsData = await db.query(testQ);
+    const samplesData = await db.query(samplesQ);
+
+    const data = [testsData.rows, samplesData.rows];
+    
+    files.write("/var/pg_dump/data.json", JSON.stringify(data));
+    await exec(`cd /var/pg_dump && tar -zcvf ${uploadFileName} data.json`);
   },
 
-  copySchemaQuery: (copy, original) => {
-    return `CREATE TABLE ${copy} AS TABLE ${original} WITH NO DATA;`;
-  },
-
-  prepPgDumpTable: async (tableName, tableToCopy) => {
-    let query = `SELECT EXISTS (SELECT FROM ` +
-      `information_schema.tables WHERE table_name = $1);`;
-    let data = await db.query(query, [tableName]);
-
-    if (data.rows[0].exists === false) {
-      await db.query(tests.copySchemaQuery(tableName, tableToCopy));
-    } else {
-      // remove any temporary copy data from prior pg dumps
-      await db.query(`DELETE FROM ${tableName}`);
-    }
+  s3ObjectNameForTest(testName) {
+    return `${testName.replaceAll("-", "")}.tar.gz`;
   },
 
   validKeys: (data) => {
     const keys = Object.keys(data).join(",");
-    return keys.match(/(name|status|archive_id)/);
+    return keys.match(/(name|status)/);
   },
 
   createName: () => {
@@ -135,9 +130,8 @@ const tests = {
   },
 
   nameExists: async (name) => {
-    let names = await tests.getAll();
-    names = names.map(test => test.name);
-    return names.includes(name);
+    const test = await tests.get("", name);
+    return !!test;
   },
 
   invalidName: async (name) => {
@@ -146,4 +140,4 @@ const tests = {
   }
 };
 
-module.exports = tests;
+export default tests;
