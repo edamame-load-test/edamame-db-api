@@ -11,7 +11,7 @@ To Dos:
   - [x] `GET /tests/:id` -> returns the metadata associated with a specific test
   - [x] `PATCH /tests/:id` -> allows user to change some information about a test: its name, status, and end time
   - [x] `DELETE /tests/:id` -> deletes a test, and associated metrics, from the db
-  - [x] `POST /tests/pg_dump/:testName ` -> sets up pg dump process by creating copy tables to store a single test's data at a time for a more manageable pg dump
+  - [x] `POST /tests/archive/:testName ` -> ensures the AWS s3 bucket is setup (creates a bucket if one doesn't already exist) and uploads a single load test's data as an s3 object with the standard infrequent access storage class as a compressed tar file
 - ToDo Later:
   - [ ] provide an endpoint that accepts some kind of `sql` file and runs it against the db
 
@@ -224,16 +224,16 @@ Notes:
 
 ### Archiving a test in an AWS S3 Bucket
 
-`POST /tests/archive/:testName` -> Copies all test and samples data associated with the test whose name is `testName` into newly created separate tables for a pg dump. Subsequently, it performs a pg dump on the these separate tables to export the data for one test and its associated sample metrics. It leverages the AWS CLI to upload a compressed version of the pg dump file to an AWS S3 Bucket with the storage class S3 Standard Infrequent Access.
+`POST /tests/archive/:testName` -> Creates a tar file (that's ultimately a compressed version of a json file) that contains the data of a single load test. Subsequently, it uploads the compressed file as an s3 object to the edamame load tests AWS s3 bucket for longer term storage. The storage class of the s3 object upload is standard infrequent access, which offers cheaper access relative to some other S3 object storage classes, but also quick retrieval when the user wants to restore the data. If a user wants to use AWS Glacier storage instead (for even cheaper AWS cold storage), they can change the storage class of the uploaded load test s3 objects through the AWS CLI or the AWS console.
 
 Example usage:
-`POST /tests/archive/example`
+`POST /tests/archive/50kVus`
 
 Response: `201 OK`
 
 ```json
 {
-  "success": "Successfully archived a compressed pg dump file of the test: example to an AWS S3 Bucket with the S3 Standard Infrequent Access storage class."
+  "success": "Successfully archived test: 50kVus in your edamame-load-tests AWS S3 Bucket."
 }
 ```
 
@@ -244,6 +244,6 @@ Note:
 
 ```json
 {
-  "error": "Cannot perform pg dump for the test: incorrectName, as there is no data associated with this test name."
+  "error": "Cannot archive a nonexistent test: incorrectTestName."
 }
 ```
