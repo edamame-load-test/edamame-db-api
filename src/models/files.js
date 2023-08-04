@@ -1,6 +1,6 @@
 import path from "path";
 import fs from "fs";
-import { fileURLToPath } from 'url';
+import { fileURLToPath } from "url";
 import { promisify } from "util";
 import child_process from "child_process";
 const exec = promisify(child_process.exec);
@@ -15,7 +15,7 @@ const files = {
   },
 
   read: (path) => {
-    return fs.readFileSync(path, 'utf-8');
+    return fs.readFileSync(path, "utf-8");
   },
 
   fileNames: (path) => {
@@ -30,30 +30,42 @@ const files = {
     const filename = fileURLToPath(import.meta.url);
     const dirname = path.dirname(filename);
     let fullpath = path.join(dirname, filePath);
-    return fullpath.replace(/ /g, '\\ ');
+    return fullpath.replace(/ /g, "\\ ");
   },
 
   delete: (filePath) => {
     return fs.rm(filePath, (err) => err);
   },
 
+  compress: async (directory, compressedFile, ...files) => {
+    const fileList = files.join(" ");
+    await exec(
+      `cd ${directory} && tar -czvf ${compressedFile} ` +
+        `--absolute-names --warning=no-file-changed ${fileList}`
+    );
+  },
+
   splitFile: async (filePath, partSize, fileName, outputDir) => {
-    let command = `cd ${filePath} && split -b ` +
-    `${partSize} ${fileName} ${outputDir}`;
+    let command =
+      `cd ${filePath} && split -b ` + `${partSize} ${fileName} ${outputDir}`;
     return exec(command);
   },
 
+  unZip: async (zipFile) => {
+    return exec(`cd /var/pg_dump/ && tar -xzvf ${zipFile}`);
+  },
+
   numBytes: async (filePath) => {
-    const { stdout } = await exec(`wc -c ${filePath}`); 
+    const { stdout } = await exec(`wc -c ${filePath}`);
     return Number(stdout.match(/[0-9]{1,}/)[0]);
   },
 
   cleanUpDir: (directory) => {
     let allFiles = files.fileNames(directory);
-    allFiles.forEach(fileName => {
+    allFiles.forEach((fileName) => {
       fs.rmSync(`${directory}/${fileName}`);
     });
-  }
+  },
 };
 
 export default files;

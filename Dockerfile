@@ -6,7 +6,8 @@ COPY . /Users/rachwest/Desktop/edamame-db-api
 
 RUN apt-get update || : && apt-get install -y \
   python3 \
-  python3-pip
+  python3-pip \
+  postgresql-client
 RUN pip3 install awscli
 RUN npm install
 

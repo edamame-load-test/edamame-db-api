@@ -1,4 +1,4 @@
-import dotenv from 'dotenv';
+import dotenv from "dotenv";
 dotenv.config();
 
 import cors from "cors";
@@ -6,11 +6,11 @@ import morgan from "morgan";
 import express from "express";
 const app = express();
 
-import aws from './models/aws.js';
-import pg from './models/pg_client.js';
-import errorHandler from './middleware/errorHandler.js';
-import unknownEndpoint from './middleware/unknownEndpoint.js';
-import testsController from './controllers/tests.js';
+import aws from "./models/aws.js";
+import pg from "./models/pg_client.js";
+import errorHandler from "./middleware/errorHandler.js";
+import unknownEndpoint from "./middleware/unknownEndpoint.js";
+import testsController from "./controllers/tests.js";
 
 app.use(cors());
 app.use(express.json());
@@ -28,7 +28,7 @@ app.use(morgan("tiny"));
 app.use("/tests", testsController);
 
 // error handling
-app.use(unknownEndpoint);
 app.use(errorHandler);
+app.use(unknownEndpoint);
 
 export default app;
