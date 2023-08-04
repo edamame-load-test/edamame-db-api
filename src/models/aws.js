@@ -1,6 +1,4 @@
-import { 
-  ARCHIVE
-} from "../constants/constants.js";
+import { ARCHIVE } from "../constants/constants.js";
 import { promisify } from "util";
 import child_process from "child_process";
 const exec = promisify(child_process.exec);
@@ -11,9 +9,7 @@ const aws = {
   },
 
   configureCredentials: async () => {
-    await exec(
-      `aws configure set region ${process.env.AWS_REGION}`
-    );
+    await exec(`aws configure set region ${process.env.AWS_REGION}`);
     await exec(
       `aws configure set aws_access_key_id ${process.env.AWS_ACCESS_KEY_ID}`
     );
@@ -41,10 +37,17 @@ const aws = {
     } catch (error) {
       if (error.stderr.match("Not Found")) {
         return false;
-      } else { // unknown error; abort process
+      } else {
+        // unknown error; abort process
         throw Error(error);
       }
     }
+  },
+
+  downloadS3Object: async (objectName) => {
+    await exec(
+      `cd /var/pg_dump && aws s3 cp s3://${ARCHIVE}/${objectName} ./${objectName}`
+    );
   },
 
   archiveBucketExists: async () => {
@@ -54,17 +57,18 @@ const aws = {
     } catch (error) {
       if (error.stderr.match("NoSuchBucket")) {
         return false;
-      } else { // unknown error; abort process
+      } else {
+        // unknown error; abort process
         throw Error(error);
       }
     }
   },
 
-  uploadToS3: async (file) => {
-    const command = `aws s3 mv /var/pg_dump/${file} ` +
-      `s3://${ARCHIVE} --storage-class STANDARD_IA`;
-    await exec(command);
-  }
+  uploadToS3: async (filePath) => {
+    await exec(
+      `aws s3 mv ${filePath} s3://${ARCHIVE} --storage-class STANDARD_IA`
+    );
+  },
 };
 
 export default aws;

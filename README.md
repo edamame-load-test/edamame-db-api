@@ -4,7 +4,7 @@ Provides external API endpoints for edamame client to interface with internal po
 
 To Dos:
 
-- [ ] User authentication? (not needed for the moment due to port forwarding, no external IP will be exposed)
+- [ ] User authentication? (not needed for the moment due to ingress rule)
 - Need the following endpoints:
   - [x] `GET /tests` -> returns all the tests
   - [x] `POST /tests` -> creates a new test with either custom name or randomly generated name and script, and returns the test
@@ -12,8 +12,7 @@ To Dos:
   - [x] `PATCH /tests/:id` -> allows user to change some information about a test: its name, status, and end time
   - [x] `DELETE /tests/:id` -> deletes a test, and associated metrics, from the db
   - [x] `POST /tests/archive/:testName ` -> ensures the AWS s3 bucket is setup (creates a bucket if one doesn't already exist) and uploads a single load test's data as an s3 object with the standard infrequent access storage class as a compressed tar file
-- ToDo Later:
-  - [ ] provide an endpoint that accepts some kind of `sql` file and runs it against the db
+  - [x] `POST /tests/import/:testName ` -> downloads AWS s3 object based on provided test name and copies the load test data stored within the s3 object into the postgres database
 
 ## Routes
 
@@ -224,7 +223,7 @@ Notes:
 
 ### Archiving a test in an AWS S3 Bucket
 
-`POST /tests/archive/:testName` -> Creates a tar file (that's ultimately a compressed version of a json file) that contains the data of a single load test. Subsequently, it uploads the compressed file as an s3 object to the edamame load tests AWS s3 bucket for longer term storage. The storage class of the s3 object upload is standard infrequent access, which offers cheaper access relative to some other S3 object storage classes, but also quick retrieval when the user wants to restore the data. If a user wants to use AWS Glacier storage instead (for even cheaper AWS cold storage), they can change the storage class of the uploaded load test s3 objects through the AWS CLI or the AWS console.
+`POST /tests/archive/:testName` -> Creates a tar file that's ultimately a compressed version of .csv files that contain Postgres data associated with one load test that was exported from the Postgres database via COPY SQL statements. Subsequently, it uploads the compressed file as an s3 object to an AWS s3 bucket for longer term storage. The storage class of the s3 object upload is standard infrequent access, which offers cheaper access relative to some other S3 object storage classes, but also quick retrieval when the user wants to restore the data. If a user wants to use AWS Glacier storage instead (for even cheaper AWS cold storage), they can change the storage class of the uploaded load test s3 objects through the AWS CLI or the AWS console.
 
 Example usage:
 `POST /tests/archive/50kVus`
@@ -245,5 +244,39 @@ Note:
 ```json
 {
   "error": "Cannot archive a nonexistent test: incorrectTestName."
+}
+```
+
+### Importing a test from AWS S3 Bucket
+
+`POST /tests/import/:testName` -> Downloads AWS s3 object associated with the test name provided, unzips the compressed file into .csvs containing data for the tests and samples tables, and then copies the contents of these .csvs into the Postgres database
+
+Example usage:
+`POST /tests/import/50kVus`
+
+Response: `201 OK`
+
+```json
+{
+  "success": "Successfully imported the test: 50kVus from your AWS S3 Bucket."
+}
+```
+
+Notes:
+
+- User must pass a valid test name that's associated with an existing s3 object.
+- If data in the s3 object overlaps with data load test already existing in the Postgres database, then a 400 status code will be returned along with the following body:
+
+```json
+{
+  "error": "Can't import duplicate load test information."
+}
+```
+
+- If an s3 object doesn't exist with the provided test name, a 400 status code will be returned along with the following body:
+
+```json
+{
+  "error": "Couldn't find S3 object associated with test: invalidTestName."
 }
 ```
