@@ -102,7 +102,7 @@ const tests = {
   },
 
   s3ObjectNameForTest: (testName) => {
-    return `${testName}.tar.gz`;
+    return `${testName.replaceAll(" ", "")}.tar.gz`;
   },
 
   importFromCsv: async () => {
