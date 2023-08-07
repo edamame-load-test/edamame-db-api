@@ -66,7 +66,9 @@ router.post("/import/:testName", async (req, res, next) => {
   const { testName } = req.params;
 
   try {
-    const exists = await aws.s3ObjectExists(`${testName}.tar.gz`);
+    const exists = await aws.s3ObjectExists(
+      tests.s3ObjectNameForTest(testName)
+    );
     if (!exists) {
       return res.status(400).send({
         error: `Couldn't find S3 object associated with test: ${testName}`,
