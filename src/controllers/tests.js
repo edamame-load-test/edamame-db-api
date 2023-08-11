@@ -3,7 +3,6 @@ import tests from "../models/tests.js";
 import aws from "../models/aws.js";
 import archive from "../models/archive.js";
 import {
-  ARCHIVE,
   INVALID_NAME_ERROR_MSG,
   GET_TEST_ERROR_MSG,
   BAD_ID_ERROR_MSG,
@@ -37,27 +36,28 @@ router.get("/:id", async (req, res, next) => {
 
 router.post("/archive/:testName", async (req, res, next) => {
   const { testName } = req.params;
+  const storage = req.query.storage;
+
   const test = await tests.get("", testName);
 
   if (test === undefined) {
     return res
       .status(400)
-      .send({ error: `Cannot archive a nonexistent test: ${testName}` });
+      .send({ error: archive.nonexistentTestMsg(testName) });
   }
 
   try {
-    await archive.exportToAWS(test);
-    res.status(201).send({
-      success:
-        `Successfully archived test: ${testName} in ` +
-        `your ${ARCHIVE} AWS S3 Bucket.`,
-    });
-  } catch (error) {
-    if (error.message.match("10,000 subpart upload limit|already exists")) {
-      res.status(400).send({ error: error.message });
+    await archive.exportToAWS(test, storage);
+    res.status(201).send({ success: archive.uploadSuccessMsg(testName) });
+  } catch (err) {
+    const invalidInput = err.message.match(
+      "upload limit|already exists|Invalid storage class"
+    );
+    if (invalidInput) {
+      res.status(400).send({ error: err.message });
     } else {
-      error.messageForClient = `Issue archiving ${testName}.`;
-      next(error);
+      err.messageForClient = `Issue archiving ${testName}.`;
+      next(err);
     }
   }
 });
@@ -69,23 +69,18 @@ router.post("/import/:testName", async (req, res, next) => {
     const exists = await aws.s3ObjectExists(
       tests.s3ObjectNameForTest(testName)
     );
-    if (!exists) {
-      return res.status(400).send({
-        error: `Couldn't find S3 object associated with test: ${testName}`,
-      });
+    if (!exists) throw Error(archive.unknownObjectMsg(testName));
+    const result = await archive.importFromAWS(testName);
+    return res.status(result.statusCode).send(result.message);
+  } catch (err) {
+    if (err.message.match("duplicate|Couldn't find S3 object")) {
+      const clientMessage = err.message.match("duplicate")
+        ? DUPLICATE_IMPORT
+        : err.message;
+      return res.status(400).send({ error: clientMessage });
     }
-    await archive.importFromAWS(testName);
-    return res.status(201).send({
-      success: `Successfully imported the test: ${testName} from your AWS S3 Bucket.`,
-    });
-  } catch (error) {
-    if (error.message.match("duplicate")) {
-      return res.status(400).send({
-        error: `Can't import duplicate load test information`,
-      });
-    }
-    error.messageForClient = `Issue importing ${testName} from AWS S3`;
-    next(error);
+    err.messageForClient = `Issue importing ${testName} from AWS S3`;
+    next(err);
   }
 });
 

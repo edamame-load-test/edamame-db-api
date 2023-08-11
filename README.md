@@ -223,7 +223,23 @@ Notes:
 
 ### Archiving a test in an AWS S3 Bucket
 
-`POST /tests/archive/:testName` -> Creates a tar file that's ultimately a compressed version of .csv files that contain Postgres data associated with one load test that was exported from the Postgres database via COPY SQL statements. Subsequently, it uploads the compressed file as an s3 object to an AWS s3 bucket for longer term storage. The storage class of the s3 object upload is standard infrequent access, which offers cheaper access relative to some other S3 object storage classes, but also quick retrieval when the user wants to restore the data. If a user wants to use AWS Glacier storage instead (for even cheaper AWS cold storage), they can change the storage class of the uploaded load test s3 objects through the AWS CLI or the AWS console.
+`POST /tests/archive/:testName?storage=<storage_class>` -> Creates a tar file that's ultimately a compressed version of .csv files that contain Postgres data associated with one load test that was exported from the Postgres database via COPY SQL statements. Subsequently, it uploads the compressed file as an s3 object to an AWS s3 bucket for longer term storage. The storage class query parameter is optional and if no class is provided, the default standard storage class will be used. <br/>
+
+- A user can select any of the following valid storage class options:
+
+> STANDARD (Standard)
+> REDUCED_REDUNDANCY (Reduced Redundancy)
+> STANDARD_IA (Standard Infrequent Access)
+> ONEZONE_IA (One Zone Infrequent Access)
+> INTELLIGENT_TIERING (Standard Intelligent-Tiering)
+> GLACIER (Glacier Flexible Retrieval)
+> DEEP_ARCHIVE (Glacier Deep Archive)
+> GLACIER_IR (Glacier Instant Retrieval)
+
+- The available storage options have different associated fees & availability SLAs. Some of the classes also have retrieval charges and minimum storage duration charges. Read more about the storage class options at the following links to ensure the right class is chosen for your storage needs.
+
+  > https://aws.amazon.com/s3/storage-classes/  
+  > https://docs.aws.amazon.com/AmazonS3/latest/userguide/storage-class-intro.html > <br />
 
 Example usage:
 `POST /tests/archive/50kVus`

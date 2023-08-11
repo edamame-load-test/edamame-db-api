@@ -45,7 +45,7 @@ const aws = {
   },
 
   downloadS3Object: async (objectName) => {
-    await exec(
+    return exec(
       `cd /var/pg_dump && aws s3 cp s3://${ARCHIVE}/${objectName} ./${objectName}`
     );
   },
@@ -64,9 +64,9 @@ const aws = {
     }
   },
 
-  uploadToS3: async (filePath) => {
+  uploadToS3: async (filePath, storageClass) => {
     await exec(
-      `aws s3 mv ${filePath} s3://${ARCHIVE} --storage-class STANDARD_IA`
+      `aws s3 mv ${filePath} s3://${ARCHIVE} --storage-class ${storageClass}`
     );
   },
 };
