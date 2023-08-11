@@ -84,7 +84,7 @@ describe("AWS S3 import and export paths", () => {
     expect(response.statusCode).toBe(400);
     expect(response.body).toHaveProperty(
       "error",
-      `Couldn't find S3 object associated with test: ${fakeName}`
+      `Couldn't find S3 object associated with the test ${fakeName}`
     );
   });
 });
