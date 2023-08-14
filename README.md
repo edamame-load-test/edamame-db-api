@@ -21,6 +21,8 @@ To Dos:
 [Get an individual test](#get-an-individual-test)
 [Update a test](#update-a-test)
 [Delete a test](#deleting-a-test)
+[Archive a test](#archiving-a-test-in-an-aws-s3-bucket)
+[Import a test](#importing-a-test-from-aws-s3-bucket)
 
 ### Get a list of all tests
 
@@ -227,19 +229,19 @@ Notes:
 
 - A user can select any of the following valid storage class options:
 
-> STANDARD (Standard)
-> REDUCED_REDUNDANCY (Reduced Redundancy)
-> STANDARD_IA (Standard Infrequent Access)
-> ONEZONE_IA (One Zone Infrequent Access)
-> INTELLIGENT_TIERING (Standard Intelligent-Tiering)
-> GLACIER (Glacier Flexible Retrieval)
-> DEEP_ARCHIVE (Glacier Deep Archive)
-> GLACIER_IR (Glacier Instant Retrieval)
+  - STANDARD (Standard)
+  - REDUCED_REDUNDANCY (Reduced Redundancy)
+  - STANDARD_IA (Standard Infrequent Access)
+  - ONEZONE_IA (One Zone Infrequent Access)
+  - INTELLIGENT_TIERING (Standard Intelligent-Tiering)
+  - GLACIER (Glacier Flexible Retrieval)
+  - DEEP_ARCHIVE (Glacier Deep Archive)
+  - GLACIER_IR (Glacier Instant Retrieval)
 
 - The available storage options have different associated fees & availability SLAs. Some of the classes also have retrieval charges and minimum storage duration charges. Read more about the storage class options at the following links to ensure the right class is chosen for your storage needs.
 
-  > https://aws.amazon.com/s3/storage-classes/  
-  > https://docs.aws.amazon.com/AmazonS3/latest/userguide/storage-class-intro.html > <br />
+  - https://aws.amazon.com/s3/storage-classes/
+  - https://docs.aws.amazon.com/AmazonS3/latest/userguide/storage-class-intro.html > <br />
 
 Example usage:
 `POST /tests/archive/50kVus`
