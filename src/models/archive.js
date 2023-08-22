@@ -31,10 +31,10 @@ const archive = {
     try {
       const s3ObjectName = tests.s3ObjectNameForTest(testName);
       const result = await aws.downloadS3Object(s3ObjectName);
-      if (result.stdout.match("restore")) {
+      if (result.stdout.match("restore the object")) {
         return {
           statusCode: 400,
-          message: { error: archive.importSuccessMsg(testName) },
+          message: { error: archive.restoreFirstMsg(testName) },
         };
       } else {
         const response = await archive.importToDatabase(testName, s3ObjectName);
@@ -81,6 +81,10 @@ const archive = {
     } else {
       throw Error(`Invalid storage class specified: ${storageClass}`);
     }
+  },
+
+  restoreFirstMsg: (testName) => {
+    return `The S3 object for the test ${testName} needs to be restored before it can be imported.`;
   },
 
   importSuccessMsg: (testName) => {
